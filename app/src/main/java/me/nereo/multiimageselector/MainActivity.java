@@ -3,9 +3,10 @@ package me.nereo.multiimageselector;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
@@ -17,13 +18,17 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import me.nereo.multi_image_selector.MultiImageSelector;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
     private static final int REQUEST_IMAGE = 2;
     protected static final int REQUEST_STORAGE_READ_ACCESS_PERMISSION = 101;
@@ -34,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText mRequestNum;
 
     private ArrayList<String> mSelectPath;
+    private static final int RC_CAMERA_PERM = 123;
+    private static final int RC_EXTERNAL_STORAGE = 124;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,9 +55,9 @@ public class MainActivity extends AppCompatActivity {
         mChoiceMode.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int checkedId) {
-                if(checkedId == R.id.multi){
+                if (checkedId == R.id.multi) {
                     mRequestNum.setEnabled(true);
-                }else{
+                } else {
                     mRequestNum.setEnabled(false);
                     mRequestNum.setText("");
                 }
@@ -69,14 +76,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @AfterPermissionGranted(RC_EXTERNAL_STORAGE)
     private void pickImage() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN // Permission was added in API Level 16
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE,
-                    getString(R.string.mis_permission_rationale),
-                    REQUEST_STORAGE_READ_ACCESS_PERMISSION);
-        }else {
+                && !EasyPermissions.hasPermissions(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            // Ask for one permission
+            EasyPermissions.requestPermissions(this, getString(R.string.mis_permission_rationale),
+                    RC_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE);
+        } else {
             boolean showCamera = mShowCamera.getCheckedRadioButtonId() == R.id.show;
             int maxNum = 9;
 
@@ -100,8 +107,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void requestPermission(final String permission, String rationale, final int requestCode){
-        if(ActivityCompat.shouldShowRequestPermissionRationale(this, permission)){
+    private void requestPermission(final String permission, String rationale, final int requestCode) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
             new AlertDialog.Builder(this)
                     .setTitle(R.string.mis_permission_dialog_title)
                     .setMessage(rationale)
@@ -113,30 +120,28 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .setNegativeButton(R.string.mis_permission_dialog_cancel, null)
                     .create().show();
-        }else{
+        } else {
             ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == REQUEST_STORAGE_READ_ACCESS_PERMISSION){
-            if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                pickImage();
-            }
-        } else {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // EasyPermissions handles the request result.
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == REQUEST_IMAGE){
-            if(resultCode == RESULT_OK){
+        if (requestCode == REQUEST_IMAGE) {
+            if (resultCode == RESULT_OK) {
                 mSelectPath = data.getStringArrayListExtra(MultiImageSelector.EXTRA_RESULT);
                 StringBuilder sb = new StringBuilder();
-                for(String p: mSelectPath){
+                for (String p : mSelectPath) {
                     sb.append(p);
                     sb.append("\n");
                 }
@@ -166,4 +171,37 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> perms) {
+        Toast.makeText(this, "onPermissionsGranted", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> perms) {
+        if (requestCode == RC_EXTERNAL_STORAGE) {
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.mis_permission_dialog_title)
+                    .setMessage("没有权限, 你需要去设置中开启读取手机存储权限.")
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.mis_permission_dialog_ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Uri packageURI = Uri.parse("package:" + getPackageName());
+                            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageURI);
+                            startActivity(intent);
+//                            startActivity(new Intent(Settings.ACTION_APPLICATION_SETTINGS));
+                            finish();
+                        }
+                    })
+                    .setNegativeButton(R.string.mis_permission_dialog_cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    }).create().show();
+        }
+        Toast.makeText(this, "onPermissionsDenied", Toast.LENGTH_SHORT).show();
+    }
+
 }

@@ -1,5 +1,7 @@
 package me.nereo.multi_image_selector;
 
+import com.squareup.picasso.Picasso;
+
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -33,8 +35,6 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.IOException;
