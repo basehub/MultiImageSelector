@@ -1,8 +1,9 @@
 package me.nereo.multi_image_selector.adapter;
 
+import com.bumptech.glide.Glide;
+
 import android.content.Context;
 import android.graphics.Point;
-import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,13 +11,10 @@ import android.view.WindowManager;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 
-import com.squareup.picasso.Picasso;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.nereo.multi_image_selector.MultiImageSelectorFragment;
 import me.nereo.multi_image_selector.R;
 import me.nereo.multi_image_selector.bean.Image;
 
@@ -41,48 +39,57 @@ public class ImageGridAdapter extends BaseAdapter {
 
     final int mGridWidth;
 
-    public ImageGridAdapter(Context context, boolean showCamera, int column){
+    public ImageGridAdapter(Context context, boolean showCamera, int column) {
         mContext = context;
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         this.showCamera = showCamera;
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         int width = 0;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            Point size = new Point();
-            wm.getDefaultDisplay().getSize(size);
-            width = size.x;
-        }else{
-            width = wm.getDefaultDisplay().getWidth();
-        }
+        Point size = new Point();
+        wm.getDefaultDisplay().getSize(size);
+        width = size.x;
         mGridWidth = width / column;
     }
+
+    /**
+     * 取得当前可以显示的全部图片
+     */
+    public List<Image> getImages() {
+        return mImages;
+    }
+
+    /**
+     * 取得当前选择的全部图片
+     */
+    public List<Image> getSelectedImages() {
+        return mSelectedImages;
+    }
+
     /**
      * 显示选择指示器
-     * @param b
      */
     public void showSelectIndicator(boolean b) {
         showSelectIndicator = b;
     }
 
-    public void setShowCamera(boolean b){
-        if(showCamera == b) return;
+    public void setShowCamera(boolean b) {
+        if (showCamera == b) return;
 
         showCamera = b;
         notifyDataSetChanged();
     }
 
-    public boolean isShowCamera(){
+    public boolean isShowCamera() {
         return showCamera;
     }
 
     /**
      * 选择某个图片，改变选择状态
-     * @param image
      */
     public void select(Image image) {
-        if(mSelectedImages.contains(image)){
+        if (mSelectedImages.contains(image)) {
             mSelectedImages.remove(image);
-        }else{
+        } else {
             mSelectedImages.add(image);
         }
         notifyDataSetChanged();
@@ -90,24 +97,23 @@ public class ImageGridAdapter extends BaseAdapter {
 
     /**
      * 通过图片路径设置默认选择
-     * @param resultList
      */
     public void setDefaultSelected(ArrayList<String> resultList) {
-        for(String path : resultList){
+        for (String path : resultList) {
             Image image = getImageByPath(path);
-            if(image != null){
+            if (image != null) {
                 mSelectedImages.add(image);
             }
         }
-        if(mSelectedImages.size() > 0){
+        if (mSelectedImages.size() > 0) {
             notifyDataSetChanged();
         }
     }
 
-    private Image getImageByPath(String path){
-        if(mImages != null && mImages.size()>0){
-            for(Image image : mImages){
-                if(image.path.equalsIgnoreCase(path)){
+    private Image getImageByPath(String path) {
+        if (mImages != null && mImages.size() > 0) {
+            for (Image image : mImages) {
+                if (image.path.equalsIgnoreCase(path)) {
                     return image;
                 }
             }
@@ -117,14 +123,13 @@ public class ImageGridAdapter extends BaseAdapter {
 
     /**
      * 设置数据集
-     * @param images
      */
     public void setData(List<Image> images) {
         mSelectedImages.clear();
 
-        if(images != null && images.size()>0){
+        if (images != null && images.size() > 0) {
             mImages = images;
-        }else{
+        } else {
             mImages.clear();
         }
         notifyDataSetChanged();
@@ -137,25 +142,25 @@ public class ImageGridAdapter extends BaseAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        if(showCamera){
-            return position==0 ? TYPE_CAMERA : TYPE_NORMAL;
+        if (showCamera) {
+            return position == 0 ? TYPE_CAMERA : TYPE_NORMAL;
         }
         return TYPE_NORMAL;
     }
 
     @Override
     public int getCount() {
-        return showCamera ? mImages.size()+1 : mImages.size();
+        return showCamera ? mImages.size() + 1 : mImages.size();
     }
 
     @Override
     public Image getItem(int i) {
-        if(showCamera){
-            if(i == 0){
+        if (showCamera) {
+            if (i == 0) {
                 return null;
             }
-            return mImages.get(i-1);
-        }else{
+            return mImages.get(i - 1);
+        } else {
             return mImages.get(i);
         }
     }
@@ -168,22 +173,22 @@ public class ImageGridAdapter extends BaseAdapter {
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
 
-        if(isShowCamera()){
-            if(i == 0){
+        if (isShowCamera()) {
+            if (i == 0) {
                 view = mInflater.inflate(R.layout.mis_list_item_camera, viewGroup, false);
                 return view;
             }
         }
 
         ViewHolder holder;
-        if(view == null){
+        if (view == null) {
             view = mInflater.inflate(R.layout.mis_list_item_image, viewGroup, false);
             holder = new ViewHolder(view);
-        }else{
+        } else {
             holder = (ViewHolder) view.getTag();
         }
 
-        if(holder != null) {
+        if (holder != null) {
             holder.bindData(getItem(i));
         }
 
@@ -195,41 +200,42 @@ public class ImageGridAdapter extends BaseAdapter {
         ImageView indicator;
         View mask;
 
-        ViewHolder(View view){
+        ViewHolder(View view) {
             image = (ImageView) view.findViewById(R.id.image);
             indicator = (ImageView) view.findViewById(R.id.checkmark);
             mask = view.findViewById(R.id.mask);
             view.setTag(this);
         }
 
-        void bindData(final Image data){
-            if(data == null) return;
+        void bindData(final Image data) {
+            if (data == null) return;
             // 处理单选和多选状态
-            if(showSelectIndicator){
+            if (showSelectIndicator) {
                 indicator.setVisibility(View.VISIBLE);
-                if(mSelectedImages.contains(data)){
+                if (mSelectedImages.contains(data)) {
                     // 设置选中状态
                     indicator.setImageResource(R.drawable.mis_btn_selected);
                     mask.setVisibility(View.VISIBLE);
-                }else{
+                } else {
                     // 未选择
                     indicator.setImageResource(R.drawable.mis_btn_unselected);
                     mask.setVisibility(View.GONE);
                 }
-            }else{
+            } else {
                 indicator.setVisibility(View.GONE);
             }
             File imageFile = new File(data.path);
             if (imageFile.exists()) {
                 // 显示图片
-                Picasso.with(mContext)
+                Glide.with(mContext)
                         .load(imageFile)
-                        .placeholder(R.drawable.mis_default_error)
-                        .tag(MultiImageSelectorFragment.TAG)
-                        .resize(mGridWidth, mGridWidth)
                         .centerCrop()
+                        .thumbnail(0.5f)
+                        .placeholder(R.drawable.mis_default_error)
+                        .error(R.drawable.mis_default_error)
+                        .dontAnimate()
                         .into(image);
-            }else{
+            } else {
                 image.setImageResource(R.drawable.mis_default_error);
             }
         }

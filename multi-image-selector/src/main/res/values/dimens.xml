@@ -3,4 +3,16 @@
     <dimen name="mis_image_size">120dp</dimen>
     <dimen name="mis_space_size">2dp</dimen>
     <dimen name="mis_folder_cover_size">72dp</dimen>
+
+    <dimen name="mis_btn_radius">2dp</dimen>
+    <dimen name="mis_bar_height">48dp</dimen>
+    <dimen name="mis_btn_height">32dp</dimen>
+    <dimen name="mis_margin_text">8dp</dimen>
+    <dimen name="mis_status_bar_height">25dp</dimen>
+    <dimen name="mis_big_image_size">74dp</dimen>
+    <dimen name="mis_min_button_width">52dp</dimen>
+    <dimen name="mis_margin_layout">16dp</dimen>
+    <dimen name="mis_middle_text_size">18sp</dimen>
+    <dimen name="mis_small_text_size">16sp</dimen>
+    <dimen name="mis_mini_text_size">14sp</dimen>
 </resources>

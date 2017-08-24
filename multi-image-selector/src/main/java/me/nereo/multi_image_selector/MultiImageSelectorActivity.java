@@ -1,5 +1,6 @@
 package me.nereo.multi_image_selector;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -23,7 +24,7 @@ import java.util.ArrayList;
  * Updated by nereo on 2016/5/18.
  */
 public class MultiImageSelectorActivity extends AppCompatActivity
-        implements MultiImageSelectorFragment.Callback{
+        implements MultiImageSelectorFragment.Callback {
 
     // Single choice
     public static final int MODE_SINGLE = 0;
@@ -36,7 +37,7 @@ public class MultiImageSelectorActivity extends AppCompatActivity
     public static final String EXTRA_SELECT_MODE = "select_count_mode";
     /** Whether show camera，true by default */
     public static final String EXTRA_SHOW_CAMERA = "show_camera";
-    /** Result data set，ArrayList&lt;String&gt;*/
+    /** Result data set，ArrayList&lt;String&gt; */
     public static final String EXTRA_RESULT = "select_result";
     /** Original data set */
     public static final String EXTRA_DEFAULT_SELECTED_LIST = "default_list";
@@ -50,7 +51,6 @@ public class MultiImageSelectorActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTheme(R.style.MIS_NO_ACTIONBAR);
         setContentView(R.layout.mis_activity_default);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -58,7 +58,7 @@ public class MultiImageSelectorActivity extends AppCompatActivity
         }
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        if(toolbar != null){
+        if (toolbar != null) {
             setSupportActionBar(toolbar);
         }
 
@@ -71,33 +71,25 @@ public class MultiImageSelectorActivity extends AppCompatActivity
         mDefaultCount = intent.getIntExtra(EXTRA_SELECT_COUNT, DEFAULT_IMAGE_SIZE);
         final int mode = intent.getIntExtra(EXTRA_SELECT_MODE, MODE_MULTI);
         final boolean isShow = intent.getBooleanExtra(EXTRA_SHOW_CAMERA, true);
-        if(mode == MODE_MULTI && intent.hasExtra(EXTRA_DEFAULT_SELECTED_LIST)) {
+        if (mode == MODE_MULTI && intent.hasExtra(EXTRA_DEFAULT_SELECTED_LIST)) {
             resultList = intent.getStringArrayListExtra(EXTRA_DEFAULT_SELECTED_LIST);
         }
 
         mSubmitButton = (Button) findViewById(R.id.commit);
-        if(mode == MODE_MULTI){
+        if (mode == MODE_MULTI) {
             updateDoneText(resultList);
             mSubmitButton.setVisibility(View.VISIBLE);
             mSubmitButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if(resultList != null && resultList.size() >0){
-                        // Notify success
-                        Intent data = new Intent();
-                        data.putStringArrayListExtra(EXTRA_RESULT, resultList);
-                        setResult(RESULT_OK, data);
-                    }else{
-                        setResult(RESULT_CANCELED);
-                    }
-                    finish();
+                    onSelectDone(resultList);
                 }
             });
-        }else{
+        } else {
             mSubmitButton.setVisibility(View.GONE);
         }
 
-        if(savedInstanceState == null){
+        if (savedInstanceState == null) {
             Bundle bundle = new Bundle();
             bundle.putInt(MultiImageSelectorFragment.EXTRA_SELECT_COUNT, mDefaultCount);
             bundle.putInt(MultiImageSelectorFragment.EXTRA_SELECT_MODE, mode);
@@ -109,6 +101,18 @@ public class MultiImageSelectorActivity extends AppCompatActivity
                     .commit();
         }
 
+    }
+
+    private void onSelectDone(ArrayList<String> images) {
+        if (images != null && images.size() > 0) {
+            // Notify success
+            Intent data = new Intent();
+            data.putStringArrayListExtra(EXTRA_RESULT, images);
+            setResult(RESULT_OK, data);
+        } else {
+            setResult(RESULT_CANCELED);
+        }
+        finish();
     }
 
     @Override
@@ -124,14 +128,15 @@ public class MultiImageSelectorActivity extends AppCompatActivity
 
     /**
      * Update done button by select image data
+     *
      * @param resultList selected image data
      */
-    private void updateDoneText(ArrayList<String> resultList){
+    private void updateDoneText(ArrayList<String> resultList) {
         int size = 0;
-        if(resultList == null || resultList.size()<=0){
+        if (resultList == null || resultList.size() <= 0) {
             mSubmitButton.setText(R.string.mis_action_done);
             mSubmitButton.setEnabled(false);
-        }else{
+        } else {
             size = resultList.size();
             mSubmitButton.setEnabled(true);
         }
@@ -150,7 +155,7 @@ public class MultiImageSelectorActivity extends AppCompatActivity
 
     @Override
     public void onImageSelected(String path) {
-        if(!resultList.contains(path)) {
+        if (!resultList.contains(path)) {
             resultList.add(path);
         }
         updateDoneText(resultList);
@@ -158,7 +163,7 @@ public class MultiImageSelectorActivity extends AppCompatActivity
 
     @Override
     public void onImageUnselected(String path) {
-        if(resultList.contains(path)){
+        if (resultList.contains(path)) {
             resultList.remove(path);
         }
         updateDoneText(resultList);
@@ -166,7 +171,7 @@ public class MultiImageSelectorActivity extends AppCompatActivity
 
     @Override
     public void onCameraShot(File imageFile) {
-        if(imageFile != null) {
+        if (imageFile != null) {
             // notify system the image has change
             sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imageFile)));
 
@@ -175,6 +180,28 @@ public class MultiImageSelectorActivity extends AppCompatActivity
             data.putStringArrayListExtra(EXTRA_RESULT, resultList);
             setResult(RESULT_OK, data);
             finish();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == ImagePreviewActivity.REQUEST_PREVIEW) {
+                boolean isDone = data.getBooleanExtra(ImagePreviewActivity.OUTPUT_ISDONE, false);
+                ArrayList<String> images = data.getStringArrayListExtra(ImagePreviewActivity.OUTPUT_LIST);
+
+                if (isDone) {
+                    onSelectDone(images);
+                }
+//                    Intent intent = new Intent();
+//                    intent.putStringArrayListExtra(EXTRA_RESULT, resultList);
+//                    getActivity().setResult(Activity.RESULT_OK, data);
+//                    getActivity().finish();
+//                    onSelectDone(images);
+            } else {
+//                    imageAdapter.bindSelectImages(images);
+            }
         }
     }
 }

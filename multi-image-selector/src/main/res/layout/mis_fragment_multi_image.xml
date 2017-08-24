@@ -14,7 +14,7 @@
         android:layout_alignParentTop="true"
         android:clipToPadding="false"
         android:horizontalSpacing="@dimen/mis_space_size"
-        android:numColumns="3"
+        android:numColumns="4"
         android:paddingBottom="?android:attr/actionBarSize"
         android:verticalSpacing="@dimen/mis_space_size"/>
 

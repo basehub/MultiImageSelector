@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bitmap
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@mipmap/mis_ic_checked"
+    android:tint="@color/mis_green"/>

@@ -29,7 +29,7 @@
             android:paddingRight="10dp"
             android:paddingTop="5dp"
             android:textColor="@color/mis_default_text_color"
-            android:textSize="14sp"/>
+            android:textSize="@dimen/mis_mini_text_size"/>
 
     </android.support.v7.widget.Toolbar>
 
